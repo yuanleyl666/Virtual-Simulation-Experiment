@@ -34,14 +34,21 @@
     <a-table :pagination="{ pageSize: 50 }" :columns="columns2" :data-source="tableData2" :scroll="{ y: 240 }" bordered
         size="middle" style="word-break: break-all;">
     </a-table>
-    <p>总工期最大值: {{ maxSum }} &nbsp;&nbsp;&nbsp;&nbsp; 总工期最小值: {{ minSum }}</p>
+    <div style="width:100%;text-align:left">
+        <span style="width:30%; text-indent: 2em; font-weight: bold;">总工期最大值: </span>
+        <span style="display:inline-block;font-size:20px;">{{ maxSum }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp</span>
+        <span style="width:30%; text-indent: 2em; font-weight: bold;">总工期最小值: </span>
+        <span style="display:inline-block;font-size:20px;">{{ minSum }}</span>
+    </div>
     <br>
 
     <p class="secondtitle">第四步：统计总工期的概率和累积概率分布</p>
     <p class="content">计算得出总工期的最小值与最大值作为范围，统计该范围内每个总工期值的概率和累积概率。 <br />
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;实验操作：统计总工期值的概率和累积概率</p>
-    <!-- <a-button type="primary" @click="printMinMaxValues">计算最小值与最大值</a-button> -->
-    
+    <a-button type="primary" @click="calculateStatistics">计算总工期值的概率与累积概率</a-button>
+    <h2 style="text-align: center">总工期值、概率与累积概率</h2>
+    <a-table :pagination="{ pageSize: 50 }" :columns="statsColumns" :data-source="sumStats" :scroll="{ y: 240 }" bordered
+        size="middle" style="word-break: break-all;"></a-table>
     <br>
 
     <p class="secondtitle">第五步：绘制总工期的概率和累积概率分布图</p>
@@ -49,6 +56,11 @@
         绘制总工期的概率和累积概率分布图。红色柱状图是整个项目估计刚好多少天完工的概率数据，
         蓝线是整个项目在多少天内完工的概率，也就是蒙特卡洛模拟的结果。<br />
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;实验操作：绘制总工期的概率和累积概率分布图。 </p>
+    <a-button type="primary" @click="renderCombinedChart">绘制图表</a-button>
+    <h2 style="text-align: center">总工期概率、累积概率分布图</h2>
+    <div class="chart-container">
+        <div ref="combinedChart" class="chart"></div>
+    </div>
 
 
     <p class="secondtitle">第六步：合理规划项目进度</p>
@@ -56,96 +68,6 @@
         (1)假设最低允许30%不能按时完工的风险，得出项目应规划为多少日内完成。
         (2)假设最低允许15%不能按时完工的风险，得出项目应规划为多少日内完成。<br />
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;实验操作：计算项目进度规划。 </p>
-
-
-
-    <h2 style="text-align: center">EO 和 EQ 复杂度认定表</h2>
-    <a-table :pagination="false" :columns="columns3" :data-source="tableData3" bordered size="middle"
-        style="word-break: break-all;" />
-    <br>
-
-    <h2 style="text-align: center">每个组件复杂度等级与功能点数对应关系表 </h2>
-    <a-table :pagination="false" :columns="columns4" :data-source="tableData4" bordered size="middle"
-        style="word-break: break-all;" />
-    <br>
-
-
-
-    <h2>二、实验参数 </h2>
-
-    <h2 style="text-align: center;">表1：未调整功能点计算表 </h2>
-    <a-table :pagination="false" :columns="columns" :data-source="tableData" bordered size="middle"
-        style="word-break: break-all;">
-        <template #bodyCell="{ column, record, index }">
-            <template v-if="column.dataIndex === 'A' && tableData !== undefined">
-                <a-input v-model:value="record.A" style="width:100px; " />
-            </template>
-            <template v-if="column.dataIndex === 'D' && tableData !== undefined">
-                <a-input v-model:value="record.D" style="width:100px;" />
-            </template>
-            <template v-if="column.dataIndex === 'G' && tableData !== undefined">
-                <a-input v-model:value="record.G" style="width:100px;" />
-            </template>
-            <template v-if="column.dataIndex === 'C' && tableData !== undefined">
-                {{ c(index) }}
-            </template>
-            <template v-if="column.dataIndex === 'F' && tableData !== undefined">
-                {{ f(index) }}
-            </template>
-            <template v-if="column.dataIndex === 'I' && tableData !== undefined">
-                {{ i(index) }}
-            </template>
-            <template v-if="column.dataIndex === 'number' && tableData !== undefined">
-                {{ number(index) }}
-            </template>
-            <template v-if="column.dataIndex === 'unchanged' && tableData !== undefined">
-                {{ unchanged(index) }}
-            </template>
-        </template>
-    </a-table>
-    <br>
-
-    <div style="width:100%;text-align:right">
-        <span style="width:30%;display:inline-block" class="secondtitle">本实验未调整功能点总计为 </span>
-        <span style="display:inline-block;font-size:20px;">{{ SUM }}</span>
-    </div>
-    <br>
-    <br>
-
-    <h2 style="text-align: center;">表2：系统特征因子表及计算表 </h2>
-    <a-table :columns="columnsadjust" :pagination="false" :data-source="dataadjust" bordered size="middle"
-        style="word-break: break-all;">
-        <template #bodyCell="{ column, record }">
-            <template v-if="column.dataIndex === 'grade'">
-                <a-input-group compact>
-                    <a-select v-model:value="record.grade">
-                        <a-select-option value="0">0</a-select-option>
-                        <a-select-option value="1">1</a-select-option>
-                        <a-select-option value="2">2</a-select-option>
-                        <a-select-option value="3">3</a-select-option>
-                        <a-select-option value="4">4</a-select-option>
-                        <a-select-option value="5">5</a-select-option>
-                    </a-select>
-
-                </a-input-group>
-
-            </template>
-        </template>
-    </a-table>
-    <br>
-    <div style="width:100%;text-align:right">
-        <span style="width:30%;display:inline-block" class="secondtitle">合计数 </span>
-        <span style="display:inline-block;font-size:20px;">{{ SUM_A }}</span>
-    </div>
-    <br>
-    <br>
-
-    <span class="secondtitle">功能点调整因子(VAF)为 </span>
-    <span style="font-size:20px">{{ VAF }}</span>
-    <br /><br />
-    <span class="secondtitle">本实验案例的功能点为</span>
-    <span style="font-size:20px">{{ ALL }}</span>
-    <br /><br />
 </template>
 
 
@@ -153,94 +75,18 @@
 <script lang="ts">
 import { reactive } from 'vue'
 import { defineComponent } from 'vue'
+import * as echarts from 'echarts';
 export default {
     name: 'Exp1_IFPUG',
+    mounted() {
+        //this.renderCombinedChart();
+    },
     data() {
         return {
             test: '21111',
-            SUM: 0,
-            VAF: 0,
-            SUM_A: 0,
             maxSum: 0,
             minSum: 0,
-            columns3: [
-                {
-                    title: '引用的文件类型个数(FTR) ',
-                    dataIndex: 'FTR',
-                    key: 'type',
-                    align: 'center',
-                    width: 400,
-                    // fixed: 'left',
-                },
-                {
-                    title: '数据元素类型(DET)',
-                    children: [
-                        {
-                            title: '1-5',
-                            dataIndex: 'left',
-                            key: 'type',
-                            align: 'center'
-                            // width: 30,
-                            // fixed: 'left',
-                        },
-                        {
-                            title: '6-19',
-                            dataIndex: 'mide',
-                            key: 'type',
-                            align: 'center'
-                            // width: 30,
-                            // fixed: 'left',
-                        },
-                        {
-                            title: '>19',
-                            dataIndex: 'right',
-                            key: 'type',
-                            align: 'center'
-                            // width: 30,
-                            // fixed: 'left',
-                        },
-                    ]
-                }
-            ],
-            columns4: [
-                {
-                    title: '类型 ',
-                    dataIndex: 'type',
-                    key: 'type',
-                    align: 'center',
-                    width: 400,
-                    // fixed: 'left',
-                },
-                {
-                    title: '复杂度级别',
-                    children: [
-                        {
-                            title: '简单',
-                            dataIndex: 'easy',
-                            key: 'type',
-                            align: 'center'
-                            // width: 30,
-                            // fixed: 'left',
-                        },
-                        {
-                            title: '平均',
-                            dataIndex: 'mide',
-                            key: 'type',
-                            align: 'center'
-                            // width: 30,
-                            // fixed: 'left',
-                        },
-                        {
-                            title: '复杂',
-                            dataIndex: 'complex',
-                            key: 'type',
-                            align: 'center'
-                            // width: 30,
-                            // fixed: 'left',
-                        },
-                    ]
-                }
-            ],
+            sumStats: [], // 统计信息
             columns1: [
                 {
                     title: '',
@@ -304,180 +150,50 @@ export default {
                 {
                     title: '设计',
                     dataIndex: 'design',
-                    width: 150,
+                    align: 'center',
+                    width: 400,
                 },
                 {
                     title: '建造',
                     dataIndex: 'build',
-                    width: 150,
+                    align: 'center',
+                    width: 400,
                 },
                 {
                     title: '测试',
                     dataIndex: 'test',
+                    align: 'center',
+                    width: 400,
                 },
                 {
                     title: '总工期',
                     dataIndex: 'sum',
+                    align: 'center',
+                    width: 400,
                 },
 
             ],
-            columns: [
+            statsColumns: [
                 {
-                    title: '组件',
-                    dataIndex: 'component',
-                    key: 'component',
-                    align: 'center'
-                    // width: 30,
-                    // fixed: 'left',
-                },
-                {
-                    title: '数量',
-                    dataIndex: 'number',
-                    key: 'number',
-                    align: 'center'
-                    // width: 30,
-                    // fixed: 'left',
-                },
-                {
-                    title: '复杂度',
-                    children: [
-                        {
-                            title: '简单',
-                            align: 'center',
-                            children: [{
-                                title: '计数',
-                                align: 'center',
-                                children: [{
-                                    title: 'A',
-                                    // width: 30,
-                                    dataIndex: 'A',
-                                    align: 'center'
-                                }],
-                            },
-                            {
-                                title: '权重',
-                                align: 'center',
-                                children: [{
-                                    title: 'B',
-                                    dataIndex: 'B',
-                                    align: 'center',
-                                    // width: 30,
-                                }],
-                            },
-                            {
-                                title: '功能点数',
-                                align: 'center',
-                                children: [{
-                                    title: 'C=A*B',
-                                    align: 'center',
-                                    dataIndex: 'C',
-                                    // width: 30,
-                                }],
-                            }
-                            ],
-                        },
-                        {
-                            title: '平均',
-                            align: 'center',
-                            children: [{
-                                title: '计数', children: [{
-                                    align: 'center',
-                                    dataIndex: 'D',
-                                    title: 'D',
-                                    // width: 30,
-                                }],
-                            },
-                            {
-                                title: '权重',
-                                align: 'center',
-                                children: [{
-                                    dataIndex: 'E',
-                                    align: 'center',
-                                    title: 'E',
-                                    // width: 30,
-                                }],
-                            },
-                            {
-                                title: '功能点数',
-                                align: 'center',
-                                children: [{
-                                    dataIndex: 'F',
-                                    title: 'F=D*E',
-                                    align: 'center',
-                                    // width: 30,
-                                }],
-                            }],
-                        },
-                        {
-                            title: '复杂',
-                            align: 'center',
-                            children: [{
-                                title: '计数',
-                                align: 'center',
-                                children: [{
-                                    dataIndex: 'G',
-                                    align: 'center',
-                                    title: 'G',
-                                    // width: 30,
-                                }],
-                            },
-                            {
-                                title: '权重',
-                                align: 'center',
-                                children: [{
-                                    dataIndex: 'H',
-                                    align: 'center',
-                                    title: 'H',
-                                    // width: 30,
-                                }],
-                            },
-                            {
-                                title: '功能点数',
-                                align: 'center',
-                                children: [{
-                                    dataIndex: 'I',
-                                    title: 'I=G*H',
-                                    align: 'center',
-                                    // width: 30,
-                                }],
-                            }],
-                        },
-
-                    ]
-                },
-                {
-                    title: '未调整功能点数',
-                    dataIndex: 'unchanged',
-                    key: 'unchanged',
+                    title: '总工期',
+                    dataIndex: 'sum',
+                    key: 'sum',
                     align: 'center',
-                    // width: 800,
-                    // fixed: 'right',
+                    width: 400,
                 },
-            ],
-            columnsadjust: [
                 {
-                    title: '序号',
-                    dataIndex: 'index',
-                    key: 'component',
+                    title: '出现概率',
+                    dataIndex: 'probability',
+                    key: 'probability',
                     align: 'center',
-                    width: 100
-                    // fixed: 'left',
+                    width: 400,
                 },
                 {
-                    title: '因子',
-                    dataIndex: 'title',
-                    key: 'component',
+                    title: '累积概率',
+                    dataIndex: 'cumulativeProbability',
+                    key: 'cumulativeProbability',
                     align: 'center',
-                    width: 900,
-                    // fixed: 'left',
-                },
-                {
-                    title: '等级',
-                    dataIndex: 'grade',
-                    key: 'component',
-                    align: 'center'
-                    // width: 30,
-                    // fixed: 'left',
+                    width: 400,
                 },
             ],
             tableData1: [
@@ -510,284 +226,9 @@ export default {
                 },
             ],
             tableData2: [],
-            tableData3: [
-                {
-                    FTR: '0~1',
-                    left: '简单',
-                    mide: '简单',
-                    right: '平均'
-                },
-                {
-                    FTR: '2~3',
-                    left: '简单',
-                    mide: '平均',
-                    right: '复杂'
-                },
-                {
-                    FTR: '>3',
-                    left: '平均',
-                    mide: '复杂',
-                    right: '复杂'
-                }
-            ],
-            tableData4: [
-                {
-                    type: 'ILF',
-                    easy: 'X7',
-                    mide: 'X10',
-                    complex: 'X15'
-                },
-                {
-                    type: 'EIF',
-                    easy: 'X5',
-                    mide: 'X7',
-                    complex: 'X10'
-                },
-                {
-                    type: 'EI',
-                    easy: 'X3',
-                    mide: 'X4',
-                    complex: 'X6'
-                },
-                {
-                    type: 'EO',
-                    easy: 'X4',
-                    mide: 'X5',
-                    complex: 'X7'
-                },
-                {
-                    type: 'EQ',
-                    easy: 'X3',
-                    mide: 'X4',
-                    complex: 'X6'
-                }
-            ],
-            tableData: [
-                {
-                    component: 'EI',
-                    number: '',
-                    A: '',
-                    B: '3',
-                    C: '',
-                    D: '',
-                    E: '4',
-                    F: '',
-                    G: '',
-                    H: '6',
-                    I: '',
-                    unchanged: '',
-                },
-                {
-                    component: 'EO',
-                    number: '',
-                    A: '',
-                    B: '4',
-                    C: '',
-                    D: '',
-                    E: '5',
-                    F: '',
-                    G: '',
-                    H: '7',
-                    I: '',
-                    unchanged: '',
-                },
-                {
-                    component: 'EQ',
-                    number: '',
-                    A: '',
-                    B: '3',
-                    C: '',
-                    D: '',
-                    E: '4',
-                    F: '',
-                    G: '',
-                    H: '6',
-                    I: '',
-                    unchanged: '',
-                },
-                {
-                    component: 'ILF',
-                    number: '',
-                    A: '',
-                    B: '7',
-                    C: '',
-                    D: '',
-                    E: '10',
-                    F: '',
-                    G: '',
-                    H: '15',
-                    I: '',
-                    unchanged: '',
-                },
-                {
-                    component: 'EIF',
-                    number: '',
-                    A: '',
-                    B: '5',
-                    C: '',
-                    D: '',
-                    E: '7',
-                    F: '',
-                    G: '',
-                    H: '10',
-                    I: '',
-                    unchanged: '',
-                },
-            ],
-            dataadjust: [
-                {
-                    index: '1',
-                    title: 'Requirement for reliable backup and recovery ',
-                    grade: ''
-
-                },
-                {
-                    index: '2',
-                    title: 'Requirement for data communication',
-                    grade: ''
-
-                },
-                {
-                    index: '3',
-                    title: 'Extent of distributed processing ',
-                    grade: ''
-
-                },
-                {
-                    index: '4',
-                    title: 'Performance requirements ',
-                    grade: ''
-
-                },
-                {
-                    index: '5',
-                    title: 'Expected operational environment ',
-                    grade: ''
-
-                },
-                {
-                    index: '6',
-                    title: 'Extent of online data entries ',
-                    grade: ''
-
-                },
-                {
-                    index: '7',
-                    title: 'Extent of multi-screen or multi-operation online data input ',
-                    grade: ''
-
-                },
-                {
-                    index: '8',
-                    title: 'Extent of online updating of master files ',
-                    grade: ''
-
-                },
-                {
-                    index: '9',
-                    title: 'Extent of complex inputs, outputs, online queries and files ',
-                    grade: ''
-
-                },
-                {
-                    index: '10',
-                    title: 'Extent of complex data processing ',
-                    grade: ''
-
-                },
-                {
-                    index: '11',
-                    title: 'Extent that currently developed code can be designed for reuse ',
-                    grade: ''
-
-                },
-                {
-                    index: '12',
-                    title: 'Extent of conversion and installation included in the design ',
-                    grade: ''
-
-                },
-                {
-                    index: '13',
-                    title: 'Extent of multiple installations in an organization and variety of customer organizations ',
-                    grade: ''
-
-                },
-                {
-                    index: '14',
-                    title: 'Extent of change and focus on ease of use ',
-                    grade: ''
-
-                },
-            ]
         }
     },
     computed: {
-        c: function () {
-            return (index) => {
-                if (this.tableData.length > 0) {
-                    this.tableData[index].C = (parseInt(this.tableData[index].A) ? parseInt(this.tableData[index].A) : 0) * parseInt(this.tableData[index].B)
-                    return this.tableData[index].C
-                }
-            }
-        },
-        f: function () {
-            return (index) => {
-                if (this.tableData.length > 0) {
-                    this.tableData[index].F = (parseInt(this.tableData[index].D) ? parseInt(this.tableData[index].D) : 0) * parseInt(this.tableData[index].E)
-                    return this.tableData[index].F
-                }
-            }
-        },
-        i: function () {
-            return (index) => {
-                if (this.tableData.length > 0) {
-                    this.tableData[index].I = (parseInt(this.tableData[index].G) ? parseInt(this.tableData[index].G) : 0) * parseInt(this.tableData[index].H)
-                    return this.tableData[index].I
-                }
-            }
-        },
-        number: function () {
-            return (index) => {
-                if (this.tableData.length > 0) {
-                    this.tableData[index].number = (parseInt(this.tableData[index].A) ? parseInt(this.tableData[index].A) : 0) + (parseInt(this.tableData[index].D) ? parseInt(this.tableData[index].D) : 0) + (parseInt(this.tableData[index].G) ? parseInt(this.tableData[index].G) : 0)
-                    return this.tableData[index].number
-                }
-            }
-        },
-        unchanged: function () {
-            return (index) => {
-                if (this.tableData.length > 0) {
-                    this.tableData[index].unchanged = (parseInt(this.tableData[index].C) ? parseInt(this.tableData[index].C) : 0) + (parseInt(this.tableData[index].F) ? parseInt(this.tableData[index].F) : 0) + (parseInt(this.tableData[index].I) ? parseInt(this.tableData[index].I) : 0)
-
-                    var sum = 0
-                    for (var i = 0; i < 5; i++)
-                        sum += (parseInt(this.tableData[i].unchanged) ? parseInt(this.tableData[i].unchanged) : 0)
-                    this.$data.SUM = sum
-
-                    return this.tableData[index].unchanged
-                }
-            }
-        },
-        VAF() {
-            var vaf = 0
-            // console.log('111',this.$data.tableData)
-            for (var i = 0; i < 14; i++)
-                vaf += (parseInt(this.dataadjust[i].grade) ? parseInt(this.dataadjust[i].grade) : 0)
-
-            vaf = vaf * 0.01 + 0.65
-            this.$data.VAF = vaf.toFixed(2)
-            return vaf
-        },
-        SUM_A() {
-            var sum = 0
-            for (var i = 0; i < 14; i++)
-                sum += (parseInt(this.dataadjust[i].grade) ? parseInt(this.dataadjust[i].grade) : 0)
-            return sum
-        },
-        ALL() {
-            return (this.$data.SUM * this.$data.VAF).toFixed(2)
-        }
     },
     methods: {
         created() {
@@ -804,28 +245,6 @@ export default {
         },
         pdfHandle2() {
             window.open('/#/show', "_blank")
-        },
-        getSummaries(param, val) {
-            const { columns, data } = param;
-            const sums = [];
-            columns.forEach((column, index) => {
-                if (index === 0) {
-                    sums[index] = (() => {
-                        // let el=<p>未调整功能点</p>
-                    })();
-                    return;
-                }
-                if (index === 11) {
-                    sums[index] = (() => {
-                        // let num=<p >￥{this.tableData[val].nonum.toFixed(2)}</p>
-                        // return num;
-                    })();
-                    return;
-                }
-            });
-            return sums;
-        },
-        count() {
         },
         createRandomData() {
             this.tableData2 = Array(400).fill(undefined).map((item) => ({
@@ -863,6 +282,81 @@ export default {
             val = u * Math.sqrt((-2 * Math.log(s)) / s);
 
             return mean + std * val;
+        },
+        calculateStatistics() {
+            const sumCounts = {};
+
+            this.tableData2.forEach((item) => {
+                const sum = item.sum;
+
+                if (sumCounts[sum]) {
+                    sumCounts[sum]++;
+                } else {
+                    sumCounts[sum] = 1;
+                }
+            });
+
+            let cumulativeProbability = 0;
+
+            this.sumStats = Object.keys(sumCounts)
+                .sort((a, b) => parseInt(a) - parseInt(b)) // 从小到大排序
+                .map((sum) => {
+                    const count = sumCounts[sum];
+                    const probability = count / this.tableData2.length;
+
+                    cumulativeProbability += probability;
+
+                    return {
+                        sum: parseInt(sum),
+                        probability: probability.toFixed(2),
+                        cumulativeProbability: cumulativeProbability.toFixed(2),
+                    };
+                });
+        },
+        renderCombinedChart() {
+            const combinedChart = echarts.init(this.$refs.combinedChart);
+            console.log(this.sumStats.sum)
+            const option = {
+                tooltip: {
+                    trigger: 'axis',
+                },
+                legend: {
+                    data: ['Probability', 'Cumulative Probability'],
+                },
+                xAxis: {
+                    type: 'category',
+                    data: this.sumStats.map(item => item.sum),
+                },
+                yAxis: [
+                    {
+                        type: 'value',
+                        name: 'Probability',
+                        min: 0,
+                        max: 1,
+                    },
+                    {
+                        type: 'value',
+                        name: 'Cumulative Probability',
+                        min: 0,
+                        max: 1,
+                    },
+                ],
+                series: [
+                    {
+                        name: 'Probability',
+                        type: 'bar',
+                        data: this.sumStats.map(item => item.probability),
+                        yAxisIndex: 0,
+                    },
+                    {
+                        name: 'Cumulative Probability',
+                        type: 'line',
+                        data: this.sumStats.map(item => item.cumulativeProbability),
+                        yAxisIndex: 1,
+                    },
+                ],
+            };
+            combinedChart.setOption(option);
         },
     }
 }
@@ -920,6 +414,16 @@ export default {
     position: absolute;
     right: 50px;
     font-weight: bold;
+}
+.chart-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  
+}
+.chart {
+  width: 80vw; /* 设置图表的宽度为容器宽度的 80% */
+  height: 600px; /* 设置图表的高度 */
 }
 
 :deep(.ant-table .ant-table-thead > tr > th) {
