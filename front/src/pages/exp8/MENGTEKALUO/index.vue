@@ -151,25 +151,21 @@ export default {
                     title: '设计',
                     dataIndex: 'design',
                     align: 'center',
-                    width: 400,
                 },
                 {
                     title: '建造',
                     dataIndex: 'build',
                     align: 'center',
-                    width: 400,
                 },
                 {
                     title: '测试',
                     dataIndex: 'test',
                     align: 'center',
-                    width: 400,
                 },
                 {
                     title: '总工期',
                     dataIndex: 'sum',
                     align: 'center',
-                    width: 400,
                 },
 
             ],
