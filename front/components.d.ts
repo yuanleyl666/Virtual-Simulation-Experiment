@@ -15,6 +15,7 @@ declare module '@vue/runtime-core' {
     AFormItem: typeof import('ant-design-vue/es')['FormItem']
     AInput: typeof import('ant-design-vue/es')['Input']
     AInputGroup: typeof import('ant-design-vue/es')['InputGroup']
+    AInputNumber: typeof import('ant-design-vue/es')['InputNumber']
     AModal: typeof import('ant-design-vue/es')['Modal']
     APopover: typeof import('ant-design-vue/es')['Popover']
     ARadioButton: typeof import('ant-design-vue/es')['RadioButton']

@@ -12,8 +12,24 @@
         <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;实验操作：将项目平均工期、标准差以及最悲观、最可能和最乐观的估计工期填入表中。
     </p>
     <h2 style="text-align: center">工期估计表</h2>
-    <a-table :pagination="false" :columns="columns1" :data-source="tableData1" bordered size="middle"
-        style="word-break: break-all;" />
+    <a-table :columns="columns1" :dataSource="tableData1" bordered size="middle" style="word-break: break-all;">
+        <template #bodyCell="{ column, record }">
+            <template v-if="column.dataIndex === 'distribution'">
+                <a-input-group compact>
+                    <a-select v-model:value="record.distribution">
+                        <a-select-option value="normal">正态分布</a-select-option>
+                        <a-select-option value="poisson">泊松分布</a-select-option>
+                        <a-select-option value="uniform">均匀分布</a-select-option>
+                    </a-select>
+                </a-input-group>
+            </template>
+            <template v-else>
+                {{ record[column.dataIndex] }}
+            </template>
+        </template>
+    </a-table>
+    <!-- <a-table :pagination="false" :columns="columns1" :data-source="tableData1" bordered size="middle"
+        style="word-break: break-all;" /> -->
     <br>
 
     <p class="secondtitle">第二步：绘制工期的正态分布图</p>
@@ -36,7 +52,8 @@
     </a-table>
     <div style="width:100%;text-align:left">
         <span style="width:30%; text-indent: 2em; font-weight: bold;">总工期最大值: </span>
-        <span style="display:inline-block;font-size:20px;">{{ maxSum }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp</span>
+        <span style="display:inline-block;font-size:20px;">{{ maxSum
+        }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp</span>
         <span style="width:30%; text-indent: 2em; font-weight: bold;">总工期最小值: </span>
         <span style="display:inline-block;font-size:20px;">{{ minSum }}</span>
     </div>
@@ -68,6 +85,18 @@
         (1)假设最低允许30%不能按时完工的风险，得出项目应规划为多少日内完成。
         (2)假设最低允许15%不能按时完工的风险，得出项目应规划为多少日内完成。<br />
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;实验操作：计算项目进度规划。 </p>
+    <br>
+    <br>
+
+    <span class="result">最低允许30%不能按时完工的风险，项目规划为</span>
+    <a-input-number id="inputNumber" v-model:value="percent30" />
+    <span class="result">&nbsp;&nbsp;日内完成</span>
+    <br /><br />
+    <span class="result">最低允许15%不能按时完工的风险，项目规划为</span>
+    <a-input-number id="inputNumber" v-model:value="percent15" />
+    <span class="result">&nbsp;&nbsp;日内完成</span>
+    <br /><br />
+
 </template>
 
 
@@ -75,6 +104,7 @@
 <script lang="ts">
 import { reactive } from 'vue'
 import { defineComponent } from 'vue'
+import { ref } from 'vue'
 import * as echarts from 'echarts';
 export default {
     name: 'Exp1_IFPUG',
@@ -87,6 +117,8 @@ export default {
             maxSum: 0,
             minSum: 0,
             sumStats: [], // 统计信息
+            percent30: ref<number>(0),
+            percent15: ref<number>(0),
             columns1: [
                 {
                     title: '',
@@ -139,10 +171,9 @@ export default {
                 {
                     title: '分布',
                     dataIndex: 'distribution',
-                    key: 'type',
+                    key: 'component',
                     align: 'center',
                     width: 400,
-                    // fixed: 'left',
                 },
 
             ],
@@ -175,21 +206,18 @@ export default {
                     dataIndex: 'sum',
                     key: 'sum',
                     align: 'center',
-                    width: 400,
                 },
                 {
                     title: '出现概率',
                     dataIndex: 'probability',
                     key: 'probability',
                     align: 'center',
-                    width: 400,
                 },
                 {
                     title: '累积概率',
                     dataIndex: 'cumulativeProbability',
                     key: 'cumulativeProbability',
                     align: 'center',
-                    width: 400,
                 },
             ],
             tableData1: [
@@ -200,7 +228,7 @@ export default {
                     pessimistic: '20',
                     average: '14',
                     sd: '2',
-                    distribution: '正态分布',
+                    distribution: 'normal',
                 },
                 {
                     stage: '开发',
@@ -209,7 +237,7 @@ export default {
                     pessimistic: '32',
                     average: '23',
                     sd: '3',
-                    distribution: '正态分布',
+                    distribution: 'normal',
                 },
                 {
                     stage: '测试',
@@ -218,7 +246,7 @@ export default {
                     pessimistic: '34',
                     average: '22',
                     sd: '4',
-                    distribution: '正态分布',
+                    distribution: 'normal',
                 },
             ],
             tableData2: [],
@@ -243,11 +271,52 @@ export default {
             window.open('/#/show', "_blank")
         },
         createRandomData() {
-            this.tableData2 = Array(400).fill(undefined).map((item) => ({
-                design: Math.round(this.normalDistribution(14, 2)),
-                build: Math.round(this.normalDistribution(23, 3)),
-                test: Math.round(this.normalDistribution(22, 4)),
-            }));
+            this.tableData2 = Array(400).fill(undefined).map((item) => {
+                var design, build, test;
+                const d1 = this.tableData1[0].distribution, d2 = this.tableData1[1].distribution, d3 = this.tableData1[2].distribution;
+                //design distribution
+                if (d1 === 'normal') {
+                    design = this.normalDistribution(parseInt(this.tableData1[0].average), parseInt(this.tableData1[0].sd));
+                }
+                else if (d1 === 'poisson') {
+                    design = this.generatePoissonRandom(parseInt(this.tableData1[0].probably));
+                }
+                else {
+                    design = this.generateUniformRandom(parseInt(this.tableData1[0].optimistic), parseInt(this.tableData1[0].pessimistic));
+                }
+
+                //build distribution
+                if (d2 === 'normal') {
+                    build = this.generateUniformRandom(parseInt(this.tableData1[1].optimistic), parseInt(this.tableData1[1].pessimistic));
+                }
+                else if (d2 === 'poisson') {
+                    build = this.generatePoissonRandom(parseInt(this.tableData1[1].probably));
+                }
+                else {
+                    build = this.generateUniformRandom(parseInt(this.tableData1[1].optimistic), parseInt(this.tableData1[1].pessimistic));
+                }
+
+                //test distribution
+                if (d3 === 'normal') {
+                    test = this.generateUniformRandom(parseInt(this.tableData1[2].optimistic), parseInt(this.tableData1[2].pessimistic));
+                }
+                else if (d3 === 'poisson') {
+                    test = this.generatePoissonRandom(parseInt(this.tableData1[2].probably));
+                }
+                else {
+                    test = this.generateUniformRandom(parseInt(this.tableData1[2].optimistic), parseInt(this.tableData1[2].pessimistic));
+                }
+                return {
+                    design: Math.round(design),
+                    build: Math.round(build),
+                    test: Math.round(test),
+                }
+            });
+            // this.tableData2 = Array(400).fill(undefined).map((item) => ({
+            //     design: Math.round(this.normalDistribution(parseInt(this.tableData1[0].average), parseInt(this.tableData1[0].sd))),
+            //     build: Math.round(this.normalDistribution(parseInt(this.tableData1[1].average), parseInt(this.tableData1[1].sd))),
+            //     test: Math.round(this.normalDistribution(parseInt(this.tableData1[2].average), parseInt(this.tableData1[2].sd))),
+            // }));
 
             let max = Number.MIN_SAFE_INTEGER;
             let min = Number.MAX_SAFE_INTEGER;
@@ -278,6 +347,21 @@ export default {
             val = u * Math.sqrt((-2 * Math.log(s)) / s);
 
             return mean + std * val;
+        },
+        generateUniformRandom(min, max) {
+            return Math.random() * (max - min) + min;
+        },
+        generatePoissonRandom(lambda) {
+            const L = Math.exp(-lambda);
+            let k = 0;
+            let p = 1;
+
+            do {
+                k++;
+                p *= Math.random();
+            } while (p > L);
+
+            return k - 1;
         },
         calculateStatistics() {
             const sumCounts = {};
@@ -372,6 +456,13 @@ export default {
     margin-right: 30px;
 }
 
+.result {
+    text-indent: 2em;
+    font-weight: bold;
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
 .maintable {
     text-align: center;
     font-family: sans-serif;
@@ -411,15 +502,19 @@ export default {
     right: 50px;
     font-weight: bold;
 }
+
 .chart-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
 }
+
 .chart {
-  width: 80vw; /* 设置图表的宽度为容器宽度的 80% */
-  height: 600px; /* 设置图表的高度 */
+    width: 80vw;
+    /* 设置图表的宽度为容器宽度的 80% */
+    height: 600px;
+    /* 设置图表的高度 */
 }
 
 :deep(.ant-table .ant-table-thead > tr > th) {
