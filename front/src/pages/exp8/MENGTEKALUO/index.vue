@@ -13,8 +13,18 @@
     </p>
     <h2 style="text-align: center">工期估计表</h2>
     <a-table :columns="columns1" :dataSource="tableData1" bordered size="middle" style="word-break: break-all;">
-        <template #bodyCell="{ column, record }">
-            <template v-if="column.dataIndex === 'distribution'">
+        <template #bodyCell="{ column, text, record }">
+            <template
+                v-if="['optimistic', 'probably', 'pessimistic', 'average', 'sd'].includes(column.dataIndex)">
+                <div>
+                    <a-input v-if="editableData[record.key]" v-model:value="editableData[record.key][column.dataIndex]"
+                        style="margin: -5px 0" />
+                    <template v-else>
+                        {{ text }}
+                    </template>
+                </div>
+            </template>
+            <template v-else-if="column.dataIndex === 'distribution'">
                 <a-input-group compact>
                     <a-select v-model:value="record.distribution">
                         <a-select-option value="normal">正态分布</a-select-option>
@@ -23,13 +33,24 @@
                     </a-select>
                 </a-input-group>
             </template>
-            <template v-else>
-                {{ record[column.dataIndex] }}
+            <template v-else-if="column.dataIndex === 'stage'">
+                {{ text }}
+            </template>
+            <template v-else-if="column.dataIndex === 'operation'">
+                <div class="editable-row-operations">
+                    <span v-if="editableData[record.key]">
+                        <a @click="save(record.key)" style="margin: 10px">保存</a>
+                        <a-popconfirm title="确定取消保存吗？" @confirm="cancel(record.key)">
+                            <a>取消</a>
+                        </a-popconfirm>
+                    </span>
+                    <span v-else>
+                        <a @click="edit(record.key)" style="margin: 10px">编辑</a>
+                    </span>
+                </div>
             </template>
         </template>
     </a-table>
-    <!-- <a-table :pagination="false" :columns="columns1" :data-source="tableData1" bordered size="middle"
-        style="word-break: break-all;" /> -->
     <br>
 
     <p class="secondtitle">第二步：绘制工期的正态分布图</p>
@@ -53,7 +74,7 @@
     <div style="width:100%;text-align:left">
         <span style="width:30%; text-indent: 2em; font-weight: bold;">总工期最大值: </span>
         <span style="display:inline-block;font-size:20px;">{{ maxSum
-        }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp</span>
+            }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp</span>
         <span style="width:30%; text-indent: 2em; font-weight: bold;">总工期最小值: </span>
         <span style="display:inline-block;font-size:20px;">{{ minSum }}</span>
     </div>
@@ -96,7 +117,6 @@
     <a-input-number id="inputNumber" v-model:value="percent15" />
     <span class="result">&nbsp;&nbsp;日内完成</span>
     <br /><br />
-
 </template>
 
 
@@ -104,6 +124,7 @@
 <script lang="ts">
 import { reactive } from 'vue'
 import { defineComponent } from 'vue'
+import { cloneDeep } from 'lodash-es';
 import { ref } from 'vue'
 import * as echarts from 'echarts';
 export default {
@@ -119,6 +140,8 @@ export default {
             sumStats: [], // 统计信息
             percent30: ref<number>(0),
             percent15: ref<number>(0),
+            editingKey: '',
+            editableData: {},
             columns1: [
                 {
                     title: '',
@@ -172,6 +195,12 @@ export default {
                     title: '分布',
                     dataIndex: 'distribution',
                     key: 'component',
+                    align: 'center',
+                    width: 400,
+                },
+                {
+                    title: 'operation',
+                    dataIndex: 'operation',
                     align: 'center',
                     width: 400,
                 },
@@ -229,6 +258,7 @@ export default {
                     average: '14',
                     sd: '2',
                     distribution: 'normal',
+                    key: '1',
                 },
                 {
                     stage: '开发',
@@ -238,6 +268,7 @@ export default {
                     average: '23',
                     sd: '3',
                     distribution: 'normal',
+                    key: '2',
                 },
                 {
                     stage: '测试',
@@ -247,6 +278,7 @@ export default {
                     average: '22',
                     sd: '4',
                     distribution: 'normal',
+                    key: '3',
                 },
             ],
             tableData2: [],
@@ -263,6 +295,17 @@ export default {
             this.$nextTick(() => {
                 this.$refs['detailTable'].doLayout();
             })
+        },
+        edit(key) {
+            this.editableData[key] = cloneDeep(this.tableData1.filter((item) => key === item.key)[0]);
+            console.log(this.editableData)
+        },
+        save(key) {
+            Object.assign(this.tableData1.filter((item) => key === item.key)[0], this.editableData[key]);
+            delete this.editableData[key];
+        },
+        cancel(key) {
+            delete this.editableData[key];
         },
         pdfHandle() {
             window.open('/#/show', "_blank")
@@ -312,11 +355,6 @@ export default {
                     test: Math.round(test),
                 }
             });
-            // this.tableData2 = Array(400).fill(undefined).map((item) => ({
-            //     design: Math.round(this.normalDistribution(parseInt(this.tableData1[0].average), parseInt(this.tableData1[0].sd))),
-            //     build: Math.round(this.normalDistribution(parseInt(this.tableData1[1].average), parseInt(this.tableData1[1].sd))),
-            //     test: Math.round(this.normalDistribution(parseInt(this.tableData1[2].average), parseInt(this.tableData1[2].sd))),
-            // }));
 
             let max = Number.MIN_SAFE_INTEGER;
             let min = Number.MAX_SAFE_INTEGER;
@@ -392,10 +430,10 @@ export default {
                         cumulativeProbability: cumulativeProbability.toFixed(2),
                     };
                 });
+            console.log(this.sumStats.length)
         },
         renderCombinedChart() {
             const combinedChart = echarts.init(this.$refs.combinedChart);
-            console.log(this.sumStats.sum)
             const option = {
                 tooltip: {
                     trigger: 'axis',
