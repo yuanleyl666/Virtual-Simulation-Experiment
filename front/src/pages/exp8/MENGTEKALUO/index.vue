@@ -211,7 +211,7 @@ export default {
                     width: 400,
                 },
                 {
-                    title: 'operation',
+                    title: '操作',
                     dataIndex: 'operation',
                     align: 'center',
                     width: 400,
